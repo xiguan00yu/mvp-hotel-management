@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+
+# Database
+db.sqlite3
+
+# Static files
+/static/
+*.db
+*.sqlite3
+*.log
+
+# Media files
+/media/
+
+# Virtual Environment
+venv/
+env/
+
+# IDE (例如，PyCharm项目文件)
+.idea/
+.vscode/
+
+# Compiled Python files
+*.pyc
+
+# Localization files
+*.mo
+
+# Secret key
+secret_key.txt
+
+# Environment variables
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+migrations/
