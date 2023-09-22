@@ -3,14 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import generics
+import time
+from datetime import date, timedelta
 
-from .models import Hotel, RoomPrice
-from .serializers import HotelSerializer, RoomPriceSerializer
+from .models import Hotel, Room, RoomPrice
+from .serializers import HotelSerializer, RoomSerializer
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from .utils import parse_marriott_rooms
 
 
 class RoomListView(APIView):
@@ -18,38 +17,48 @@ class RoomListView(APIView):
         hotel_id = request.query_params.get('hotel_id', None)
         hotel_code = request.query_params.get('hotel_code', None)
         management = request.query_params.get('management', None)
+        from_date = request.query_params.get(
+            'fromDate', (date.today() + timedelta(days=1)).strftime('%m/%d/%y'))
+        to_date = request.query_params.get(
+            'toDate', (date.today() + timedelta(days=2)).strftime('%m/%d/%y'))
 
         if not management or not hotel_code:
             return Response({'message': 'Missing Hotel parameter'}, status=status.HTTP_400_BAD_REQUEST)
 
         if management == 'Marriott':
-            room_data = self.parse_marriott_rooms()
+            room_data = parse_marriott_rooms(
+                code=hotel_code,
+                from_date=from_date,
+                to_date=to_date
+            )
         else:
             room_data = self.parse_default_rooms()
 
-        self.save_rooms_to_database(room_data, hotel_id, hotel_code)
+        search_key = f'{management}-{hotel_code}-{from_date}-{to_date}-{int(time.time())}'
+        self.save_rooms_to_database(room_data, hotel_id, search_key=search_key)
 
-        rooms = RoomPrice.objects.filter(
-            hotel_id=hotel_id, hotel_code=hotel_code)
+        rooms = Room.objects.filter(
+            hotel_id=hotel_id, search_key=search_key)
 
-        return Response(RoomPriceSerializer(rooms, many=True).data, status=status.HTTP_200_OK)
-
-    def parse_marriott_rooms(self):
-        # TODO
-        return []
+        return Response(RoomSerializer(rooms, many=True).data, status=status.HTTP_200_OK)
 
     def parse_default_rooms(self):
         # TODO
         return []
 
-    def save_rooms_to_database(self, room_data, hotel_id, hotel_code):
+    def save_rooms_to_database(self, room_data, hotel_id, search_key):
         for room_info in room_data:
-            RoomPrice.objects.update_or_create(
-                hotel_id=hotel_id,
-                hotel_code=hotel_code,
-                room_name=room_info['room_name'],
-                defaults=room_info
-            )
+            room = Room.objects.create(
+                name=room_info['room_name'], image=room_info['room_image'], hotel=Hotel.objects.get(id=hotel_id), search_key=search_key)
+
+            for price_data in room_info['room_details_list']:
+                RoomPrice.objects.create(
+                    room=room,
+                    actualRoomsAvailable=price_data['actualRoomsAvailable'],
+                    priceText=price_data['priceText'],
+                    description=price_data['description'],
+                    currency=price_data['currency']
+                )
 
 
 class ManagementValuesView(APIView):
