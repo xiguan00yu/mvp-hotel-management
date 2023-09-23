@@ -1,18 +1,22 @@
 import { PropsWithChildren, createContext, useMemo, useState } from "react";
 
 type T = {
-  currentHotel: string;
-  currentM: string;
+  currentHotelId: string | null;
+  currentHotelCode: string | null;
+  currentHotelText: string | null;
+  currentM: string | null;
 };
 
 type TF = {
-  setCurrentHotel: (h: string) => void;
+  setCurrentHotel: (id: string, code: string, text: string) => void;
   setCurrentManagement: (m: string) => void;
 };
 
 const INIT_VALUE = {
-  currentM: "Marriott",
-  currentHotel: "RKVDR",
+  currentM: null,
+  currentHotelId: null,
+  currentHotelCode: null,
+  currentHotelText: null,
 };
 
 export const HotelContext = createContext<T & TF>({
@@ -27,8 +31,13 @@ export const HotelProvider = ({ children }: PropsWithChildren) => {
   const cValue = useMemo<T & TF>(
     () => ({
       ...state,
-      setCurrentHotel: (hotel) =>
-        setState((prev) => ({ ...prev, currentHotel: hotel })),
+      setCurrentHotel: (id, code, text) =>
+        setState((prev) => ({
+          ...prev,
+          currentHotelId: id,
+          currentHotelCode: code,
+          currentHotelText: text,
+        })),
       setCurrentManagement: (m) =>
         setState((prev) => ({ ...prev, currentM: m })),
     }),

@@ -18,7 +18,7 @@ type PageResult<T> = {
   results: T[];
 };
 
-export const useHotelList = (props: { m: string; page: number }) => {
+export const useHotelList = (props: { m: string | null; page: number }) => {
   const { m, page } = props;
   return useQuery<
     PageResult<{
@@ -35,5 +35,6 @@ export const useHotelList = (props: { m: string; page: number }) => {
       );
       return data;
     },
+    enabled: m != null,
   });
 };
