@@ -31,6 +31,14 @@ export const HotelGrid = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, page]);
 
+  const onClick = (hotel: { id: string; code: string; name: string }) => {
+    setCurrentHotel(hotel.id, hotel.code, hotel.name);
+    document.querySelector("#room-list")?.scrollIntoView?.({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <div className="card bg-base-100 shadow-sm">
       <div className="card-body">
@@ -60,7 +68,7 @@ export const HotelGrid = () => {
                 <Fragment key={item.id}>
                   {array?.[index - 1]?.name?.[0] != item.name?.[0] && (
                     <div className="col-start-1 col-end-2 md:col-start-1 md:col-end-4 lg:col-start-1 lg:col-end-5">
-                      <span className="badge badge-primary">
+                      <span className="badge badge-neutral">
                         {item.name?.[0]}
                       </span>
                     </div>
@@ -70,9 +78,7 @@ export const HotelGrid = () => {
                     className={clss("link link-hover text-sm truncate", {
                       "link-primary": currentHotelCode === item.code,
                     })}
-                    onClick={() =>
-                      setCurrentHotel(item.id, item.code, item.name)
-                    }
+                    onClick={() => onClick(item)}
                   >
                     {item.name}
                   </a>
