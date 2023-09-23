@@ -20,10 +20,16 @@ def parse_marriott_rooms(code, from_date, to_date):
                 page.goto('https://www.marriott.com', timeout=1000 * 2)
             except Exception as e:
                 print(f"Error: {str(e)}")
-            page.goto(page_uri)
-            page.wait_for_selector(
-                '.rate-card-container, .js-filtered-room-list', timeout=10000, state='attached')
+            try:
+                page.goto(page_uri)
+                page.wait_for_selector(
+                    '.rate-card-container, .js-filtered-room-list', timeout=5 * 1000  # wait 5s
+                    , state='attached')
+            except Exception as e:
+                print(f"Error: {str(e)}")
             html = page.content()
+            # with open('page_content.html', 'w', encoding='utf-8') as file:
+            #     file.write(html)
             browser.close()
 
             soup = BeautifulSoup(html, 'html.parser')
@@ -38,6 +44,7 @@ def parse_marriott_rooms(code, from_date, to_date):
                 room_data = json.loads(ers4RoomList_value)
                 # with open('page_content_link1.json', 'w', encoding='utf-8') as file:
                 #         file.write(ers4RoomList_value)
+
                 def toRoom(room_element):
                     room = {
                         'room_name': getattr(room_element, 'description', 'N/A'),
@@ -77,7 +84,7 @@ def parse_marriott_rooms(code, from_date, to_date):
                         'span', class_='sold-out-label').text.strip()
                     rooms_available = int(actual_rooms_available.replace(
                         '\n', '').strip().split()[0]) if actual_rooms_available else None
-                except AttributeError:
+                except (AttributeError, ValueError):
                     rooms_available = "N/A"
 
                 try:
