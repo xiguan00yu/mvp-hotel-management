@@ -9,7 +9,7 @@ def parse_marriott_rooms(code, from_date, to_date):
         page_uri = f'https://www.marriott.com/reservation/availabilitySearch.mi?isSearch=false&isRateCalendar=false&numberOfRooms=1&numberOfAdults=1&numberOfChildren=0&useRewardsPoints=false&propertyCode={code}&fromDate={from_date}&toDate={to_date}'
         with sync_playwright() as p:
             browser = p.chromium.launch(
-                headless=False,
+                # headless=False,
             )
             context = browser.new_context(
                 user_agent=UserAgent().random)
@@ -36,13 +36,14 @@ def parse_marriott_rooms(code, from_date, to_date):
                 ers4RoomList_value = filtered_list_div.attrs.get(
                     'data-ers4-room-list')
                 room_data = json.loads(ers4RoomList_value)
-
+                # with open('page_content_link1.json', 'w', encoding='utf-8') as file:
+                #         file.write(ers4RoomList_value)
                 def toRoom(room_element):
                     room = {
                         'room_name': getattr(room_element, 'description', 'N/A'),
                         'room_details_list': []
                     }
-                    for item in room_element.roomDetailsList:
+                    for item in getattr(room_element, 'roomDetailsList', []):
                         room['room_details_list'].append({
                             "actualRoomsAvailable": getattr(item, 'actualRoomsAvailable', 'N/A'),
                             "rateAmount": getattr(item, 'rateAmount', 'N/A'),
@@ -74,8 +75,10 @@ def parse_marriott_rooms(code, from_date, to_date):
                 try:
                     actual_rooms_available = rate_card_container.find(
                         'span', class_='sold-out-label').text.strip()
+                    rooms_available = int(actual_rooms_available.replace(
+                        '\n', '').strip().split()[0]) if actual_rooms_available else None
                 except AttributeError:
-                    actual_rooms_available = "N/A"
+                    rooms_available = "N/A"
 
                 try:
                     room_name = rate_card_container.find(
@@ -114,7 +117,7 @@ def parse_marriott_rooms(code, from_date, to_date):
                         currency = 'N/A'
 
                     room['room_details_list'].append({
-                        "actualRoomsAvailable": actual_rooms_available,
+                        "actualRoomsAvailable": rooms_available,
                         "priceText": room_rate,
                         "description": price_type,
                         "currency": currency,

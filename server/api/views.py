@@ -11,6 +11,8 @@ from .serializers import HotelSerializer, RoomSerializer
 
 from .utils import parse_marriott_rooms
 
+# import json
+
 
 class RoomListView(APIView):
     def get(self, request):
@@ -31,6 +33,8 @@ class RoomListView(APIView):
                 from_date=from_date,
                 to_date=to_date
             )
+            # with open('room_data.json', 'w', encoding='utf-8') as file:
+            #     json.dump(room_data, file)
         else:
             room_data = self.parse_default_rooms()
 
@@ -48,10 +52,14 @@ class RoomListView(APIView):
 
     def save_rooms_to_database(self, room_data, hotel_id, search_key):
         for room_info in room_data:
+            room_details_list = room_info.get('room_details_list', [])
+            if not room_details_list:
+                continue
+
             room = Room.objects.create(
                 name=room_info['room_name'], image=room_info['room_image'], hotel=Hotel.objects.get(id=hotel_id), search_key=search_key)
 
-            for price_data in room_info['room_details_list']:
+            for price_data in room_details_list:
                 RoomPrice.objects.create(
                     room=room,
                     actualRoomsAvailable=price_data['actualRoomsAvailable'],
